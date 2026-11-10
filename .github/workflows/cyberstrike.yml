@@ -42,7 +42,7 @@ jobs:
       - uses: ./.github/actions/setup-bun
       # SECURITY HOLD: this action must be audited and pinned to a reviewed SHA before enabling.
       - name: Run cyberstrike
-        uses: CyberStrikeus/CyberStrike/github@latest
+        uses: CyberStrikeus/CyberStrike/github@7ace779e02f3c6bd3eb57e975e5c497499899604
         env:
           CYBERSTRIKE_API_KEY: ${{ secrets.CYBERSTRIKE_API_KEY }}
           CYBERSTRIKE_PERMISSION: '{"bash": "deny"}'
