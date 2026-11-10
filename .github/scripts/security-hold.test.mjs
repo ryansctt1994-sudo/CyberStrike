@@ -16,7 +16,7 @@ const protectedJobs = {
   'nix-hashes.yml': ['compute-hash', 'update-hashes'],
   'publish.yml': ['build-cli', 'build-app', 'publish'],
   'stats.yml': ['stats'],
-  'sign-cli.yml': ['sign'],
+  'sign-cli.yml': ['sign-cli'],
 }
 
 function blockOfJob(source, job) {
