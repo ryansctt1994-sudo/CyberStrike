@@ -107,7 +107,7 @@ jobs:
       - version
       - build-cli
       - build-app
-    if: ${{ !cancelled() && needs.build-cli.result == 'success' && needs.build-app.result == 'success' }}
+    if: ${{ github.repository == 'CyberStrikeus/CyberStrike' && !cancelled() && needs.build-cli.result == 'success' && needs.build-app.result == 'success' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
