@@ -58,3 +58,20 @@ These commands are a procedure, **not an assertion that they have passed**. The 
 ## Does not establish
 
 No successful build, test-suite result, model capability, exploit success, runtime safety, signing implementation, security guarantee, or independent reproduction is asserted by this document. Passing lint/CI alone cannot substantiate operational security.
+
+
+## Nov 9–10 follow-up: executable mock-event authorization
+
+The original static-only comment authorization check has been **superseded** by a separate, credential-free Node preflight. The fork's agent workflow is now explicitly **disabled** unless the repository identity equals the upstream project `CyberStrikeus/CyberStrike`. No fork comment, including a trusted collaborator's comment, should enter the credentialed agent job as currently configured.
+
+Files:
+- `.github/scripts/agent-gate.mjs` — pure authorization predicate and fail-closed event-file CLI.
+- `.github/scripts/agent-gate.test.mjs` — 23 executed local Node tests, including mock CLI calls and negative mutation controls.
+- `.github/workflows/agent-gate-test.yml` — standalone no-model-secret PR check.
+- `docs/audit/COMMENT_GATE_LOCAL_RESULTS_2026-11-09.json` — machine-readable execution claim, file SHA-256 hashes, and limits.
+
+**Observed local execution:** 23/23 tests passed under Node v22.16.0. These results were produced in the assistant's local disposable environment, not GitHub Actions and not by an independent reviewer.
+
+**Still blocked:** GitHub Actions execution evidence; real GitHub webhook authorization semantics; the unpinned `CyberStrikeus/CyberStrike/github@latest` dependency; the remote installer; permission boundary verification; Bun application build/tests and CodeQL.
+
+The upstream action's README documents `MOCK_TOKEN` and an AI-provider key alongside `MOCK_EVENT`: its upstream development harness is **not** credential-free. The new local preflight does not execute that action, does not require a GitHub PAT or provider key, and does not contact external targets.
