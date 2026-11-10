@@ -1,0 +1,42 @@
+{
+  "schema": "cyberstrike.comment-gate-local-test.v1",
+  "date_utc": "2026-11-10",
+  "repo": "ryansctt1994-sudo/CyberStrike",
+  "change_branch": "audit/fork-ci-safety-20261109",
+  "execution": "LOCAL_NODE_TEST",
+  "runtime": {
+    "node": "v22.16.0",
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41"
+  },
+  "command": "node --test .github/scripts/agent-gate.test.mjs",
+  "test_count": 23,
+  "test_passed": 23,
+  "test_failed": 0,
+  "artifact_sha256": {
+    ".github/scripts/agent-gate.mjs": "1bb9256a21178a0a19e8fad642a3d6131d5363cd94ed02755592117472efe7ea",
+    ".github/scripts/agent-gate.test.mjs": "9d3a34ad6b8fbdae3b1c264ad2431ca22b4e827230135751607c3fbfdb1f1ec2",
+    ".github/workflows/agent-gate-test.yml": "3994e499fa0bf40e77e340bb7e8e578e6a881bb9560ef811ad9f4ec37c4994b3",
+    ".github/workflows/cyberstrike.yml": "72c1f48b6980b8eb5fac6c7cd4ee2267c7ceef2333df7ff58f61be0551940103"
+  },
+  "local_tap_log_sha256": "f7aca7fed1bcb454ae2a06c9dfbd2a1d6ed8e986e1221179241da301ece88e26",
+  "claims_supported": [
+    "Pure policy decision denies untrusted GitHub comment roles and fork repo for tested inputs",
+    "Node CLI mock event denies fork and produces authorized=false without model credentials",
+    "Malformed event JSON does not write an allow output",
+    "Workflow source checks detect removal of preflight output and repository lock in tested mutations"
+  ],
+  "claims_not_supported": [
+    "GitHub Actions job-expression execution",
+    "Proof of authorization against GitHub actual current permissions",
+    "Bun monorepo build",
+    "Bun unit tests",
+    "CodeQL",
+    "Published action security",
+    "External installer integrity",
+    "Hostile independent verification",
+    "Upstream synchronization"
+  ],
+  "key_boundary": "The fork identity gate is deliberately disabled: cyberstrike job can run only when github.repository is CyberStrikeus/CyberStrike AND preflight outputs authorized=true; this project is a fork with repository ryansctt1994-sudo/CyberStrike.",
+  "important_note": "The upstream MOCK_EVENT example uses MOCK_TOKEN and a model provider API key; this local harness uses neither. No model/tool execution occurred.",
+  "disposition": "HOLD_CREDENTIALED_AUTOMATION"
+}
