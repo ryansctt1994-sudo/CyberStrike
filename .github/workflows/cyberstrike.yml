@@ -9,10 +9,13 @@ on:
 jobs:
   cyberstrike:
     if: |
-      contains(github.event.comment.body, ' /oc') ||
-      startsWith(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, ' /cyberstrike') ||
-      startsWith(github.event.comment.body, '/cyberstrike')
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+      (
+        contains(github.event.comment.body, ' /oc') ||
+        startsWith(github.event.comment.body, '/oc') ||
+        contains(github.event.comment.body, ' /cyberstrike') ||
+        startsWith(github.event.comment.body, '/cyberstrike')
+      )
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
