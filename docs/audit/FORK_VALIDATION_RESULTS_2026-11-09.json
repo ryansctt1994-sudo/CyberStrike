@@ -71,5 +71,8 @@
     "Validate build artifacts and checksums",
     "Test trusted/untrusted comment invocation with no real API secrets",
     "Independent review of upstream drift and automation dependency pinning"
-  ]
+  ],
+  "evidence_status": "BASELINE_SNAPSHOT_SUPERSEDED_ON_THIS_BRANCH",
+  "superseded_by": "docs/audit/COMMENT_GATE_LOCAL_RESULTS_2026-11-09.json",
+  "note": "Original static assertions were run against previous snapshot f1a4481; current workflow uses a separate credential-free preflight with different semantics. Do not extrapolate original 13/13 to the new workflow."
 }
