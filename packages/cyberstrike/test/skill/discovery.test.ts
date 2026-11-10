@@ -1,60 +1,79 @@
-import { describe, test, expect } from "bun:test"
+import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { Discovery } from "../../src/skill/discovery"
-import path from "path"
+import { rm } from "node:fs/promises"
+import path from "node:path"
 
-const CLOUDFLARE_SKILLS_URL = "https://developers.cloudflare.com/.well-known/skills/"
+const name = "ci-discovery-" + process.pid + "-" + Date.now()
+const md = "---\nname: " + name + "\ndescription: Local fixture\n---\n# Local fixture\n"
+const counts = new Map<string, number>()
+let server: ReturnType<typeof Bun.serve>
+let url = ""
 
-describe("Discovery.pull", () => {
-  test("downloads skills from cloudflare url", async () => {
-    const dirs = await Discovery.pull(CLOUDFLARE_SKILLS_URL)
-    expect(dirs.length).toBeGreaterThan(0)
+beforeAll(() => {
+  server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch(request) {
+      const route = new URL(request.url).pathname
+      counts.set(route, (counts.get(route) ?? 0) + 1)
+      if (route === "/skills/index.json") {
+        return Response.json({ skills: [{ name, description: "Local test fixture", files: ["SKILL.md", "references/guide.md"] }] })
+      }
+      if (route === "/skills/" + name + "/SKILL.md") return new Response(md)
+      if (route === "/skills/" + name + "/references/guide.md") return new Response("# Reference guide\n")
+      if (route === "/html/index.json") return new Response("<html>not JSON</html>", { headers: { "content-type": "text/html" } })
+      return new Response("not found", { status: 404 })
+    },
+  })
+  url = "http://127.0.0.1:" + server.port + "/skills/"
+})
+
+afterAll(async () => {
+  server.stop()
+  await rm(path.join(Discovery.dir(), name), { recursive: true, force: true })
+})
+
+describe("Discovery.pull (credential-free local HTTP fixture)", () => {
+  test("downloads skills from local index", async () => {
+    const dirs = await Discovery.pull(url)
+    expect(dirs).toHaveLength(1)
     for (const dir of dirs) {
       expect(dir).toStartWith(Discovery.dir())
-      const md = path.join(dir, "SKILL.md")
-      expect(await Bun.file(md).exists()).toBe(true)
+      expect(await Bun.file(path.join(dir, "SKILL.md")).exists()).toBe(true)
+      expect(await Bun.file(path.join(dir, "SKILL.md")).text()).toBe(md)
     }
-  }, 30_000)
+  })
 
   test("url without trailing slash works", async () => {
-    const dirs = await Discovery.pull(CLOUDFLARE_SKILLS_URL.replace(/\/$/, ""))
-    expect(dirs.length).toBeGreaterThan(0)
-    for (const dir of dirs) {
-      const md = path.join(dir, "SKILL.md")
-      expect(await Bun.file(md).exists()).toBe(true)
-    }
-  }, 30_000)
+    const dirs = await Discovery.pull(url.replace(/\/$/, ""))
+    expect(dirs).toHaveLength(1)
+    expect(await Bun.file(path.join(dirs[0], "SKILL.md")).exists()).toBe(true)
+  })
 
   test("returns empty array for invalid url", async () => {
-    const dirs = await Discovery.pull("https://example.invalid/.well-known/skills/")
-    expect(dirs).toEqual([])
+    expect(await Discovery.pull(url.replace("/skills/", "/invalid/"))).toEqual([])
   })
 
   test("returns empty array for non-json response", async () => {
-    const dirs = await Discovery.pull("https://example.com/")
-    expect(dirs).toEqual([])
+    expect(await Discovery.pull(url.replace("/skills/", "/html/"))).toEqual([])
   })
 
   test("downloads reference files alongside SKILL.md", async () => {
-    const dirs = await Discovery.pull(CLOUDFLARE_SKILLS_URL)
-    // find a skill dir that should have reference files (e.g. agents-sdk)
-    const agentsSdk = dirs.find((d) => d.endsWith("/agents-sdk"))
-    if (agentsSdk) {
-      const refs = path.join(agentsSdk, "references")
-      expect(await Bun.file(path.join(agentsSdk, "SKILL.md")).exists()).toBe(true)
-      // agents-sdk has reference files per the index
-      const refDir = await Array.fromAsync(new Bun.Glob("**/*.md").scan({ cwd: refs, onlyFiles: true }))
-      expect(refDir.length).toBeGreaterThan(0)
-    }
-  }, 30_000)
+    const dirs = await Discovery.pull(url)
+    expect(dirs).toHaveLength(1)
+    const refs = path.join(dirs[0], "references")
+    const refFiles = await Array.fromAsync(new Bun.Glob("**/*.md").scan({ cwd: refs, onlyFiles: true }))
+    expect(refFiles).toContain("guide.md")
+    expect(await Bun.file(path.join(refs, "guide.md")).text()).toBe("# Reference guide\n")
+  })
 
   test("caches downloaded files on second pull", async () => {
-    // first pull to populate cache
-    const first = await Discovery.pull(CLOUDFLARE_SKILLS_URL)
-    expect(first.length).toBeGreaterThan(0)
-
-    // second pull should return same results from cache
-    const second = await Discovery.pull(CLOUDFLARE_SKILLS_URL)
-    expect(second.length).toBe(first.length)
+    const first = await Discovery.pull(url)
+    expect(first).toHaveLength(1)
+    const file = "/skills/" + name + "/SKILL.md"
+    const before = counts.get(file) ?? 0
+    const second = await Discovery.pull(url)
     expect(second.sort()).toEqual(first.sort())
-  }, 60_000)
+    expect(counts.get(file) ?? 0).toBe(before)
+  })
 })
