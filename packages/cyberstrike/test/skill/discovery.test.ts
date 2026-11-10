@@ -21,6 +21,27 @@ beforeAll(() => {
       }
       if (route === "/skills/" + name + "/SKILL.md") return new Response(md)
       if (route === "/skills/" + name + "/references/guide.md") return new Response("# Reference guide\n")
+      if (route === "/bad-name/index.json") {
+        return Response.json({ skills: [{ name: "../../escape", files: ["SKILL.md"] }] })
+      }
+      if (route === "/bad-file/index.json") {
+        return Response.json({ skills: [{ name: "path-escape", files: ["SKILL.md", "../escape.md"] }] })
+      }
+      if (route === "/encoded-file/index.json") {
+        return Response.json({ skills: [{ name: "encoded-escape", files: ["SKILL.md", "%2e%2e/escape.md"] }] })
+      }
+      if (route === "/absolute-file/index.json") {
+        return Response.json({ skills: [{ name: "absolute-escape", files: ["SKILL.md", "/escape.md"] }] })
+      }
+      if (route === "/archive/index.json") {
+        return Response.json({ skills: [{ name: "unsafe-archive", type: "archive", url: "payload.tar.gz" }] })
+      }
+      if (route === "/redirect/index.json") {
+        return Response.redirect("http://127.0.0.1:" + server.port + "/skills/index.json", 302)
+      }
+      if (route === "/external/index.json") {
+        return Response.json({ skills: [{ name: "external-url", type: "skill-md", url: "https://example.com/SKILL.md" }] })
+      }
       if (route === "/html/index.json") return new Response("<html>not JSON</html>", { headers: { "content-type": "text/html" } })
       return new Response("not found", { status: 404 })
     },
@@ -65,6 +86,33 @@ describe("Discovery.pull (credential-free local HTTP fixture)", () => {
     const refFiles = await Array.fromAsync(new Bun.Glob("**/*.md").scan({ cwd: refs, onlyFiles: true }))
     expect(refFiles).toContain("guide.md")
     expect(await Bun.file(path.join(refs, "guide.md")).text()).toBe("# Reference guide\n")
+  })
+
+  test("rejects malicious skill name traversal", async () => {
+    expect(await Discovery.pull(url.replace("/skills/", "/bad-name/"))).toEqual([])
+  })
+
+  test("rejects traversal paths before downloading anything", async () => {
+    expect(await Discovery.pull(url.replace("/skills/", "/bad-file/"))).toEqual([])
+    expect(counts.get("/bad-file/path-escape/SKILL.md") ?? 0).toBe(0)
+  })
+
+  test("rejects encoded and absolute file paths", async () => {
+    expect(await Discovery.pull(url.replace("/skills/", "/encoded-file/"))).toEqual([])
+    expect(await Discovery.pull(url.replace("/skills/", "/absolute-file/"))).toEqual([])
+  })
+
+  test("rejects remote archive extraction without fetching the archive", async () => {
+    expect(await Discovery.pull(url.replace("/skills/", "/archive/"))).toEqual([])
+    expect(counts.get("/archive/payload.tar.gz") ?? 0).toBe(0)
+  })
+
+  test("rejects redirecting skill indexes", async () => {
+    expect(await Discovery.pull(url.replace("/skills/", "/redirect/"))).toEqual([])
+  })
+
+  test("rejects cross-origin skill files without downloading them", async () => {
+    expect(await Discovery.pull(url.replace("/skills/", "/external/"))).toEqual([])
   })
 
   test("caches downloaded files on second pull", async () => {
