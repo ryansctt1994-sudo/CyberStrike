@@ -1,0 +1,78 @@
+{
+  "schema": "cyberstrike.fork.validation.v1",
+  "date": "2026-11-09",
+  "repository": "ryansctt1994-sudo/CyberStrike",
+  "tested_ref": "audit/fork-ci-safety-20261109",
+  "tested_head": "2f320d291e8467c55ec23def12bbfd263308ddbd",
+  "base_ref": "main",
+  "base_sha": "a36d9d52875c10293f6bbbf279b6d0fdce6cdded",
+  "assessment": "STATIC_PATCH_CHECKS_PASS_RUNTIME_UNVERIFIED",
+  "method": "Connector-backed exact file content inspection; in-session JavaScript assertions and simulated mutation controls. No build or application execution.",
+  "static_checks": {
+    "passed": 13,
+    "total": 13,
+    "cases": [
+      "test main push",
+      "test PR trigger",
+      "typecheck main push",
+      "typecheck main PR",
+      "CodeQL main push",
+      "CodeQL main PR",
+      "trusted association guard",
+      "trusted guard before command",
+      "both comment event types",
+      "issue agent fork-disabled",
+      "lockfile-frozen install",
+      "fork branch guidance",
+      "no root test added"
+    ]
+  },
+  "mutation_controls": {
+    "detected": 5,
+    "total": 5,
+    "cases": [
+      "remove authorization",
+      "drop main from typecheck PR",
+      "allow fork issue agent",
+      "drop lockfile freeze",
+      "drop main test push"
+    ]
+  },
+  "runtime": {
+    "clone": "NOT_RUN_GITHUB_DNS_UNAVAILABLE",
+    "dependency_install": "NOT_RUN",
+    "build": "NOT_RUN",
+    "unit_tests": "NOT_RUN",
+    "typecheck": "NOT_RUN",
+    "codeql": "NOT_RUN",
+    "browser_e2e": "NOT_RUN",
+    "security_exploitation": "NOT_RUN"
+  },
+  "actions": {
+    "runs_observed_after_pr_creation": 0,
+    "interpretation": "No result. Does not establish Actions is disabled or that any test passed."
+  },
+  "out_of_scope": [
+    "Upstream synchronization",
+    "Dependency audit and script execution",
+    "Credential provisioning",
+    "Offensive functionality verification",
+    "Penetration testing",
+    "Validation of external @latest action"
+  ],
+  "assurance_limits": [
+    "Static string checks are not a semantic GitHub Actions parser or independent witness.",
+    "The author controls this evidence file and it is not externally anchored.",
+    "No end-to-end integration or safety conclusion is permitted."
+  ],
+  "next_gates": [
+    "Observe workflow run IDs on PR head",
+    "Retain test/typecheck/CodeQL logs",
+    "Validate build artifacts and checksums",
+    "Test trusted/untrusted comment invocation with no real API secrets",
+    "Independent review of upstream drift and automation dependency pinning"
+  ],
+  "evidence_status": "BASELINE_SNAPSHOT_SUPERSEDED_ON_THIS_BRANCH",
+  "superseded_by": "docs/audit/COMMENT_GATE_LOCAL_RESULTS_2026-11-09.json",
+  "note": "Original static assertions were run against previous snapshot f1a4481; current workflow uses a separate credential-free preflight with different semantics. Do not extrapolate original 13/13 to the new workflow."
+}

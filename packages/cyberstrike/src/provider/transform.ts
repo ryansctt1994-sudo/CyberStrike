@@ -454,6 +454,9 @@ export namespace ProviderTransform {
       case "@ai-sdk/togetherai":
       // https://v5.ai-sdk.dev/providers/ai-sdk-providers/togetherai
       case "@ai-sdk/xai":
+        // The legacy grok-3 slug resolves as a non-reasoning model.
+        if (model.api.id === "grok-3") return {}
+        return Object.fromEntries(WIDELY_SUPPORTED_EFFORTS.map((effort) => [effort, { reasoningEffort: effort }]))
       // https://v5.ai-sdk.dev/providers/ai-sdk-providers/xai
       case "@ai-sdk/deepinfra":
       // https://v5.ai-sdk.dev/providers/ai-sdk-providers/deepinfra
