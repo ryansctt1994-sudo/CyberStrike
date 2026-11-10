@@ -1,0 +1,22 @@
+name: security-hold-tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-holds:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify credentialed automation holds and action pin
+        run: node --test .github/scripts/security-hold.test.mjs
