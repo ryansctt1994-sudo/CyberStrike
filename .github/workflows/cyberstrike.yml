@@ -6,13 +6,30 @@ on:
   pull_request_review_comment:
     types: [created]
 
+permissions:
+  contents: read
+
 jobs:
+  # Intentionally NOT enabled for forks. This gate must never receive model secrets.
+  preflight:
+    if: github.repository == 'CyberStrikeus/CyberStrike'
+    runs-on: ubuntu-24.04
+    outputs:
+      authorized: ${{ steps.guard.outputs.authorized }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout trusted default-branch code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Authorize comment without model secrets
+        id: guard
+        run: node .github/scripts/agent-gate.mjs
+
   cyberstrike:
-    if: |
-      contains(github.event.comment.body, ' /oc') ||
-      startsWith(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, ' /cyberstrike') ||
-      startsWith(github.event.comment.body, '/cyberstrike')
+    needs: preflight
+    if: github.repository == 'CyberStrikeus/CyberStrike' && needs.preflight.outputs.authorized == 'true'
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
@@ -22,9 +39,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - uses: ./.github/actions/setup-bun
-
+      # SECURITY HOLD: this action must be audited and pinned to a reviewed SHA before enabling.
       - name: Run cyberstrike
         uses: CyberStrikeus/CyberStrike/github@latest
         env:

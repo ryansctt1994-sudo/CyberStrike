@@ -1,0 +1,22 @@
+name: agent-gate-test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mock-event-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout audited code without persisted token
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run credential-free authorization tests
+        run: node --test .github/scripts/agent-gate.test.mjs
